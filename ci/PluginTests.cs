@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oxide.Core.Libraries.Covalence;
 using Xunit;
@@ -59,7 +60,13 @@ public sealed class PluginTests
 
     private static JArray Events(Oxide.Core.Libraries.RecordedRequest request)
     {
-        return (JArray)JObject.Parse(request.Body)["events"];
+        // DateParseHandling.None keeps the wire timestamp a string; Json.NET
+        // would otherwise re-parse it into a DateTime and break assertions.
+        var parsed = JsonConvert.DeserializeObject<JObject>(
+            request.Body,
+            new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
+
+        return (JArray)parsed["events"];
     }
 
     [Fact]
