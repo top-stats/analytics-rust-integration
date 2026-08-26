@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+# Only the latest commit on a branch or PR needs checking; cancel superseded runs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Compiles the exact deployable TopStats.cs against a minimal stub of
+      # the Oxide surface it touches, then unit-tests its batching, retry,
+      # and hook behaviour through those stubs.
+      - name: Test
+        run: dotnet test ci/TopStats.Ci.csproj
